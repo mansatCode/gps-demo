@@ -3,10 +3,13 @@ import React, { useEffect, useState } from 'react'
 import MapView, { Marker, Polyline } from 'react-native-maps'
 import { decode } from "@mapbox/polyline"
 import { GOOGLE_MAPS_APIKEY } from '@env'
+import Geolocation from "react-native-geolocation-service"
+import * as Location from 'expo-location';
 
 const Map = () => {
   const [region, setRegion] = useState(BATH_INITIAL_REGION);
   const [coords, setCoords] = useState([]);
+  const [location, setLocation] = useState(null);
 
   const BATH_INITIAL_REGION = {
     latitude: 51.38151507938794, 
@@ -49,13 +52,25 @@ const Map = () => {
       .catch(err => console.log("Something went wrong"));
   }, []);
 
+  useEffect(() => {
+    console.log("CHECK")
+    const setLocation = async() => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      let l = await Location.getCurrentPositionAsync({});
+      setLocation(l);
+      console.log("HERE")
+      console.log(l)
+    }
+
+    setLocation().catch(err => console.log(err));
+  }, [])
+
   const getDirections = async (startLoc, destinationLoc ) => {
     try {
       const KEY = GOOGLE_MAPS_APIKEY;
       let resp = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${startLoc}&destination=${destinationLoc}&key=${KEY}`);
       let respJson = await resp.json();
       let points = decode(respJson.routes[0].overview_polyline.points);
-      console.log(points);
       let coords = points.map((point, index) => {
         return {
           latitude: point[0],
@@ -74,6 +89,8 @@ const Map = () => {
     <MapView 
       initialRegion={BATH_INITIAL_REGION}
       style={styles.map}
+      showsUserLocation={true}
+      followsUserLocation={true}
       //onRegionChangeComplete -> runs when user stops dragging MapView
       onRegionChangeComplete={(region) => setRegion(region)}
     >
