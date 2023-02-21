@@ -9,6 +9,8 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@mapbox/polyline": "^1.1.1",
+    "dotenv": "^16.0.3",
     "expo": "~47.0.12",
     "expo-status-bar": "~1.4.2",
     "react": "18.1.0",
@@ -16,7 +18,9 @@
     "react-native-maps": "^1.4.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.9"
+    "@babel/core": "^7.12.9",
+    "metro-react-native-babel-preset": "^0.75.0",
+    "react-native-dotenv": "^3.4.7"
   },
   "private": true
 }
