@@ -9,16 +9,17 @@ import Constants from "expo-constants"
 import InputAutocomplete from './InputAutocomplete'
 
 const { width, height } = Dimensions.get("window");
-
 const ASPECT_RATIO = width / height;
 const LATITUDE_DELTA = 0.02;
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 
 
+
 const Map = () => {
   const [region, setRegion] = useState(BATH_INITIAL_REGION);
   const [coords, setCoords] = useState([]);
-  const [location, setLocation] = useState(null);
+  const [origin, setOrigin] = useState("");
+  const [destination, setDestination] = useState("");
 
   const BATH_INITIAL_REGION = {
     latitude: 51.38151507938794, 
@@ -65,14 +66,28 @@ const Map = () => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync()
       let location = await Location.getCurrentPositionAsync({})
-      setLocation(location)
+      setOrigin(location)
     })();
   }, []);
 
   // Use the user's current location as the ORIGIN of the route
   useEffect(() => {
-    console.log(JSON.stringify(location))
-  }, [location])
+    let originLat = origin?.coords?.latitude
+    let originLong = origin?.coords?.longitude
+    console.log(`Origin: ${originLat}, ${originLong}`)
+  }, [origin])
+  useEffect(() => {
+    console.log(`Destination: ${destination.latitude}, ${destination.longitude}`)
+  }, [destination])
+  // DELETABLE STUFF
+
+  function onPlaceSelected(data, details = null) {
+    const pos = {
+      latitude: details?.geometry.location.lat,
+      longitude: details?.geometry.location.lng,
+    }
+    setDestination(pos);
+  } 
   
   const getDirections = async (startLoc, destinationLoc ) => {
     try {
@@ -96,7 +111,7 @@ const Map = () => {
   return (
   <View style={styles.container}>
     <View style={styles.searchContainer}>
-        <InputAutocomplete />
+        <InputAutocomplete onPlaceSelected={onPlaceSelected}/>
     </View>
     <MapView 
       initialRegion={BATH_INITIAL_REGION}

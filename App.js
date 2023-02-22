@@ -1,6 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
 import Map from './components/Map';
-import Test from './components/test';
 
 export default function App() {
   return (
