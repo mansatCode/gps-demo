@@ -5,8 +5,8 @@ import { decode } from "@mapbox/polyline"
 import { GOOGLE_MAPS_APIKEY } from '@env'
 import Geolocation from "react-native-geolocation-service"
 import * as Location from 'expo-location'
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete'
 import Constants from "expo-constants"
+import InputAutocomplete from './InputAutocomplete'
 
 const { width, height } = Dimensions.get("window");
 
@@ -62,15 +62,18 @@ const Map = () => {
   }, []);
 
   useEffect(() => {
-    const setLocation = async() => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      let l = await Location.getCurrentPositionAsync({});
-      setLocation(l);
-    }
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync()
+      let location = await Location.getCurrentPositionAsync({})
+      setLocation(location)
+    })();
+  }, []);
 
-    setLocation().catch(err => console.log(err));
-  }, [])
-
+  // Use the user's current location as the ORIGIN of the route
+  useEffect(() => {
+    console.log(JSON.stringify(location))
+  }, [location])
+  
   const getDirections = async (startLoc, destinationLoc ) => {
     try {
       const KEY = GOOGLE_MAPS_APIKEY;
@@ -93,18 +96,7 @@ const Map = () => {
   return (
   <View style={styles.container}>
     <View style={styles.searchContainer}>
-        <GooglePlacesAutocomplete
-          styles={{textInput: styles.input}}
-          placeholder='Search'
-          onPress={(data, details = null) => {
-            // 'details' is provided when fetchDetails = true
-            console.log(data, details);
-          }}
-          query={{
-            key: GOOGLE_MAPS_APIKEY,
-            language: 'en',
-          }}
-        />
+        <InputAutocomplete />
     </View>
     <MapView 
       initialRegion={BATH_INITIAL_REGION}
