@@ -25,14 +25,15 @@ const Map = () => {
   const mapRef = useRef(null);
 
   const [waypoints, setWaypoints] = useState([
-    {
-      latitude: 52.41351091671144,
-      longitude: -1.7724216465915656
-    }]);
+  {
+    latitude: 51.382481020706635,
+    longitude: -2.3812105369639043,
+  }, 
+  {
+    latitude: 51.37685566810041, 
+    longitude: -2.370529450651123,
+  }]);
 
-
-
-  
   const edgePaddingValue = 70;
   const edgePadding = {
     top: edgePaddingValue,
@@ -55,14 +56,8 @@ const Map = () => {
       longitude: -2.3812105369639043,
       pinColor:"orange",
     },
-    { 
-      id: 2,
-      latitude: 51.38539845372343, 
-      longitude: -2.376339037524514,
-      pinColor:"orange",
-    },
     {
-      id: 3,
+      id: 2,
       latitude: 51.37685566810041, 
       longitude: -2.370529450651123,
       pinColor:"orange",
@@ -90,17 +85,6 @@ const Map = () => {
     })();
   }, []);
 
-  // Use the user's current location as the ORIGIN of the route
-  // useEffect(() => {
-  //   let originLat = origin?.coords?.latitude
-  //   let originLong = origin?.coords?.longitude
-  //   console.log(`Origin: ${originLat}, ${originLong}`)
-  // }, [origin])
-  // useEffect(() => {
-  //   // console.log(`Destination: ${destination.latitude}, ${destination.longitude}`)
-  // }, [destination])
-  // DELETABLE STUFF
-
   function onPlaceSelected(data, details = null) {
     const pos = {
       latitude: details?.geometry.location.lat,
@@ -121,6 +105,8 @@ const Map = () => {
     if (args) {
       // args.distance
       // args.duration
+      setDistance(args.distance);
+      setDuration(args.duration);
     }
   }
 
@@ -158,6 +144,12 @@ const Map = () => {
         <TouchableOpacity style={styles.button} onPress={traceRoute}>
           <Text style={styles.buttonText}>Trace route</Text>
         </TouchableOpacity>
+        {distance && duration ? (
+          <View>
+            <Text>Distance: {distance.toFixed(2)}</Text>
+            <Text>Duration: {Math.ceil(duration)} min</Text>
+          </View>
+        ) : null}
     </View>
     <MapView 
       ref={mapRef}
@@ -169,7 +161,6 @@ const Map = () => {
       //onRegionChangeComplete -> runs when user stops dragging MapView
       onRegionChangeComplete={(region) => setRegion(region)}
     >
-      {/* {origin && <Marker coordinate={{longitude: origin.longitude, latitude: origin.latitude}}/>} */}
       {destination && <Marker coordinate={{longitude: destination?.longitude, latitude: destination?.latitude}}/>}
       {showDirections && <MapViewDirections 
         origin={origin.coords}
@@ -180,8 +171,7 @@ const Map = () => {
         onReady={traceRouteOnReady}
         waypoints={waypoints}
       />}
-      {/* {markerElements}
-      {coords.length > 0 && <Polyline coordinates={coords} strokeColor={"#000"} strokeWidth={3}/>} */}
+      {markerElements}
     </MapView>
   </View>
   );
