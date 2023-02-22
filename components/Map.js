@@ -1,10 +1,19 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
-import MapView, { Marker, Polyline } from 'react-native-maps'
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps'
 import { decode } from "@mapbox/polyline"
 import { GOOGLE_MAPS_APIKEY } from '@env'
 import Geolocation from "react-native-geolocation-service"
-import * as Location from 'expo-location';
+import * as Location from 'expo-location'
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete'
+import Constants from "expo-constants"
+
+const { width, height } = Dimensions.get("window");
+
+const ASPECT_RATIO = width / height;
+const LATITUDE_DELTA = 0.02;
+const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
+
 
 const Map = () => {
   const [region, setRegion] = useState(BATH_INITIAL_REGION);
@@ -53,13 +62,10 @@ const Map = () => {
   }, []);
 
   useEffect(() => {
-    console.log("CHECK")
     const setLocation = async() => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       let l = await Location.getCurrentPositionAsync({});
       setLocation(l);
-      console.log("HERE")
-      console.log(l)
     }
 
     setLocation().catch(err => console.log(err));
@@ -86,26 +92,31 @@ const Map = () => {
 
   return (
   <View style={styles.container}>
+    <View style={styles.searchContainer}>
+        <GooglePlacesAutocomplete
+          styles={{textInput: styles.input}}
+          placeholder='Search'
+          onPress={(data, details = null) => {
+            // 'details' is provided when fetchDetails = true
+            console.log(data, details);
+          }}
+          query={{
+            key: GOOGLE_MAPS_APIKEY,
+            language: 'en',
+          }}
+        />
+    </View>
     <MapView 
       initialRegion={BATH_INITIAL_REGION}
       style={styles.map}
       showsUserLocation={true}
       followsUserLocation={true}
+      provider={PROVIDER_GOOGLE}
       //onRegionChangeComplete -> runs when user stops dragging MapView
       onRegionChangeComplete={(region) => setRegion(region)}
     >
       {markerElements}
       {coords.length > 0 && <Polyline coordinates={coords} strokeColor={"#000"} strokeWidth={3}/>}
-      {/* <Polyline 
-        coordinates={[
-          {longitude: DUMMY_LOCATIONS[0].longitude, latitude: DUMMY_LOCATIONS[0].latitude}, 
-          {longitude: DUMMY_LOCATIONS[1].longitude, latitude: DUMMY_LOCATIONS[1].latitude},
-          {longitude: DUMMY_LOCATIONS[2].longitude, latitude: DUMMY_LOCATIONS[2].latitude},
-        ]}
-        strokeColor={"#000"}
-        strokeWidth={3}
-        lineDashPattern={[1]}
-      /> */}
     </MapView>
   </View>
   );
@@ -115,11 +126,40 @@ export default Map
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
-    height: '50%',
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "red",
   },
   map: {
-    width: '100%',
-    height: '100%',
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height,
+  },
+  searchContainer: {
+    position: "absolute",
+    width: "90%",
+    backgroundColor: "white",
+    shadowColor: "black",
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 4,
+    zIndex: 4,
+    padding: 8,
+    borderRadius: 8,
+    top: Constants.statusBarHeight,
+  },
+  input: {
+    borderColor: "#888",
+    borderWidth: 1,
+  },
+  button: {
+    backgroundColor: "#bbb",
+    paddingVertical: 12,
+    marginTop: 16,
+    borderRadius: 4,
+  },
+  buttonText: {
+    textAlign: "center",
   },
 });
