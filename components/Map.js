@@ -1,5 +1,5 @@
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps'
 import { decode } from "@mapbox/polyline"
 import { GOOGLE_MAPS_APIKEY } from '@env'
@@ -20,6 +20,7 @@ const Map = () => {
   const [coords, setCoords] = useState([]);
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
+  const mapRef = useRef(null);
 
   const BATH_INITIAL_REGION = {
     latitude: 51.38151507938794, 
@@ -114,6 +115,7 @@ const Map = () => {
         <InputAutocomplete onPlaceSelected={onPlaceSelected}/>
     </View>
     <MapView 
+      ref={mapRef}
       initialRegion={BATH_INITIAL_REGION}
       style={styles.map}
       showsUserLocation={true}
