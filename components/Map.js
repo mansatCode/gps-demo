@@ -7,20 +7,39 @@ import Geolocation from "react-native-geolocation-service"
 import * as Location from 'expo-location'
 import Constants from "expo-constants"
 import InputAutocomplete from './InputAutocomplete'
+import MapViewDirections from 'react-native-maps-directions'
 
 const { width, height } = Dimensions.get("window");
 const ASPECT_RATIO = width / height;
 const LATITUDE_DELTA = 0.02;
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 
-
-
 const Map = () => {
   const [region, setRegion] = useState(BATH_INITIAL_REGION);
   const [coords, setCoords] = useState([]);
-  const [origin, setOrigin] = useState("");
-  const [destination, setDestination] = useState("");
+  const [origin, setOrigin] = useState();
+  const [destination, setDestination] = useState();
+  const [showDirections, setShowDirections] = useState(false);
+  const [distance, setDistance] = useState(0);
+  const [duration, setDuration] = useState(0);
   const mapRef = useRef(null);
+
+  const [waypoints, setWaypoints] = useState([
+    {
+      latitude: 52.41351091671144,
+      longitude: -1.7724216465915656
+    }]);
+
+
+
+  
+  const edgePaddingValue = 70;
+  const edgePadding = {
+    top: edgePaddingValue,
+    right: edgePaddingValue,
+    bottom: edgePaddingValue,
+    left: edgePaddingValue,
+  };
 
   const BATH_INITIAL_REGION = {
     latitude: 51.38151507938794, 
@@ -72,14 +91,14 @@ const Map = () => {
   }, []);
 
   // Use the user's current location as the ORIGIN of the route
-  useEffect(() => {
-    let originLat = origin?.coords?.latitude
-    let originLong = origin?.coords?.longitude
-    console.log(`Origin: ${originLat}, ${originLong}`)
-  }, [origin])
-  useEffect(() => {
-    console.log(`Destination: ${destination.latitude}, ${destination.longitude}`)
-  }, [destination])
+  // useEffect(() => {
+  //   let originLat = origin?.coords?.latitude
+  //   let originLong = origin?.coords?.longitude
+  //   console.log(`Origin: ${originLat}, ${originLong}`)
+  // }, [origin])
+  // useEffect(() => {
+  //   // console.log(`Destination: ${destination.latitude}, ${destination.longitude}`)
+  // }, [destination])
   // DELETABLE STUFF
 
   function onPlaceSelected(data, details = null) {
@@ -88,7 +107,30 @@ const Map = () => {
       longitude: details?.geometry.location.lng,
     }
     setDestination(pos);
-  } 
+    moveCamera(pos);
+  }
+
+  function traceRoute() {
+    if (origin && destination) {
+      setShowDirections(true);
+      mapRef.current?.fitToCoordinates([origin.coords, destination], { edgePadding });
+    }
+  }
+
+  function traceRouteOnReady(args) {
+    if (args) {
+      // args.distance
+      // args.duration
+    }
+  }
+
+  async function moveCamera(pos) {
+    const camera = await mapRef.current?.getCamera();
+    if (camera) {
+      camera.center = pos;
+      mapRef.current?.animateCamera(camera, { duration: 1000 });
+    }
+  }
   
   const getDirections = async (startLoc, destinationLoc ) => {
     try {
@@ -113,6 +155,9 @@ const Map = () => {
   <View style={styles.container}>
     <View style={styles.searchContainer}>
         <InputAutocomplete onPlaceSelected={onPlaceSelected}/>
+        <TouchableOpacity style={styles.button} onPress={traceRoute}>
+          <Text style={styles.buttonText}>Trace route</Text>
+        </TouchableOpacity>
     </View>
     <MapView 
       ref={mapRef}
@@ -124,8 +169,19 @@ const Map = () => {
       //onRegionChangeComplete -> runs when user stops dragging MapView
       onRegionChangeComplete={(region) => setRegion(region)}
     >
-      {markerElements}
-      {coords.length > 0 && <Polyline coordinates={coords} strokeColor={"#000"} strokeWidth={3}/>}
+      {/* {origin && <Marker coordinate={{longitude: origin.longitude, latitude: origin.latitude}}/>} */}
+      {destination && <Marker coordinate={{longitude: destination?.longitude, latitude: destination?.latitude}}/>}
+      {showDirections && <MapViewDirections 
+        origin={origin.coords}
+        destination={destination}
+        apikey={GOOGLE_MAPS_APIKEY}
+        strokeWidth={4}
+        strokeColor="red"
+        onReady={traceRouteOnReady}
+        waypoints={waypoints}
+      />}
+      {/* {markerElements}
+      {coords.length > 0 && <Polyline coordinates={coords} strokeColor={"#000"} strokeWidth={3}/>} */}
     </MapView>
   </View>
   );
@@ -161,6 +217,15 @@ const styles = StyleSheet.create({
   input: {
     borderColor: "#888",
     borderWidth: 1,
+  },
+  button: {
+    backgroundColor: "#bbb",
+    paddingVertical: 12,
+    marginTop: 16,
+    borderRadius: 4,
+  },
+  buttonText: {
+    textAlign: "center",
   },
   button: {
     backgroundColor: "#bbb",
