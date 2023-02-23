@@ -1,7 +1,6 @@
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useEffect, useRef, useState } from 'react'
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps'
-import { decode } from "@mapbox/polyline"
 import { GOOGLE_MAPS_APIKEY } from '@env'
 import Geolocation from "react-native-geolocation-service"
 import * as Location from 'expo-location'
@@ -15,8 +14,6 @@ const LATITUDE_DELTA = 0.02;
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 
 const Map = () => {
-  const [region, setRegion] = useState(BATH_INITIAL_REGION);
-  const [coords, setCoords] = useState([]);
   const [origin, setOrigin] = useState();
   const [destination, setDestination] = useState();
   const [showDirections, setShowDirections] = useState(false);
@@ -42,13 +39,6 @@ const Map = () => {
     left: edgePaddingValue,
   };
 
-  const BATH_INITIAL_REGION = {
-    latitude: 51.38151507938794, 
-    longitude: -2.376689633845235,
-    latitudeDelta: 0.0225,
-    longitudeDelta: 0.0225,
-  }
-
   const DUMMY_LOCATIONS = [
     {
       id: 1,
@@ -72,16 +62,11 @@ const Map = () => {
   ))
 
   useEffect(() => {
-    getDirections(`${DUMMY_LOCATIONS[0].latitude},${DUMMY_LOCATIONS[0].longitude}`, `${DUMMY_LOCATIONS[1].latitude},${DUMMY_LOCATIONS[1].longitude}`)
-      .then(coords => setCoords(coords))
-      .catch(err => console.log("Something went wrong"));
-  }, []);
-
-  useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync()
       let location = await Location.getCurrentPositionAsync({})
-      setOrigin(location)
+      setOrigin(location);
+      moveCamera(location.coords);
     })();
   }, []);
 
@@ -103,8 +88,6 @@ const Map = () => {
 
   function traceRouteOnReady(args) {
     if (args) {
-      // args.distance
-      // args.duration
       setDistance(args.distance);
       setDuration(args.duration);
     }
@@ -115,25 +98,6 @@ const Map = () => {
     if (camera) {
       camera.center = pos;
       mapRef.current?.animateCamera(camera, { duration: 1000 });
-    }
-  }
-  
-  const getDirections = async (startLoc, destinationLoc ) => {
-    try {
-      const KEY = GOOGLE_MAPS_APIKEY;
-      let resp = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${startLoc}&destination=${destinationLoc}&key=${KEY}`);
-      let respJson = await resp.json();
-      let points = decode(respJson.routes[0].overview_polyline.points);
-      let coords = points.map((point, index) => {
-        return {
-          latitude: point[0],
-          longitude: point[1]
-        };
-      });
-      return coords;
-    } 
-    catch (error) {
-      return error;
     }
   }
 
@@ -153,13 +117,16 @@ const Map = () => {
     </View>
     <MapView 
       ref={mapRef}
-      initialRegion={BATH_INITIAL_REGION}
+      initialRegion={{
+        longitude: origin ? origin.longitude : 0,
+        latitude: origin ? origin.latitude : 0,
+        latitudeDelta: 0.0225,
+        longitudeDelta: 0.0225,
+      }}
       style={styles.map}
       showsUserLocation={true}
       followsUserLocation={true}
       provider={PROVIDER_GOOGLE}
-      //onRegionChangeComplete -> runs when user stops dragging MapView
-      onRegionChangeComplete={(region) => setRegion(region)}
     >
       {destination && <Marker coordinate={{longitude: destination?.longitude, latitude: destination?.latitude}}/>}
       {showDirections && <MapViewDirections 
