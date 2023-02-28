@@ -1,8 +1,7 @@
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useEffect, useRef, useState } from 'react'
-import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps'
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps'
 import { GOOGLE_MAPS_APIKEY } from '@env'
-import Geolocation from "react-native-geolocation-service"
 import * as Location from 'expo-location'
 import Constants from "expo-constants"
 import InputAutocomplete from './InputAutocomplete'
@@ -115,7 +114,8 @@ const Map = () => {
           </View>
         ) : null}
     </View>
-    <MapView 
+    <MapView
+      testID="map"
       ref={mapRef}
       initialRegion={{
         longitude: origin ? origin.longitude : 0,
@@ -138,7 +138,7 @@ const Map = () => {
         onReady={traceRouteOnReady}
         waypoints={waypoints}
       />}
-      {markerElements}
+      {/* {markerElements} */}
     </MapView>
   </View>
   );
